@@ -39,14 +39,17 @@ describe('heightToBracket', () => {
 describe('rankingToTier', () => {
   it.each([
     [1, 'N°1'],
-    [2, 'Top 3'],
+    [2, 'Top 2'],
     [3, 'Top 3'],
-    [4, 'Top 5'],
+    [4, 'Top 4'],
     [5, 'Top 5'],
     [6, 'Top 10'],
     [10, 'Top 10'],
     [11, 'Top 20'],
     [20, 'Top 20'],
+    [21, 'Top 50'],
+    [50, 'Top 50'],
+    [200, 'Top 50'],
   ])('rank %i → %s', (rank, expected) => {
     expect(rankingToTier(rank)).toBe(expected);
   });

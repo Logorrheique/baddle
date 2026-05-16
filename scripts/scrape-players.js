@@ -87,7 +87,7 @@ function yearToDecade(year) {
         return '2010s';
     return '2020s';
 }
-function detectGender(_wikiSlug, introText, categories, slug) {
+function detectGender(introText, categories) {
     const combined = (introText + ' ' + categories.join(' ')).toLowerCase();
     const femaleSignals = ["women's", 'female badminton', ' she ', ' her badminton', 'female player'];
     if (femaleSignals.some(s => combined.includes(s)))
@@ -95,16 +95,7 @@ function detectGender(_wikiSlug, introText, categories, slug) {
     const maleSignals = ["men's", ' he ', ' his badminton', 'male player'];
     if (maleSignals.some(s => combined.includes(s)))
         return 'H';
-    const femaleSlugs = [
-        'an-seyoung', 'carolina-marin', 'pv-sindhu', 'chen-yufei', 'akane-yamaguchi',
-        'he-bingjiao', 'pornpawee-chochuwong', 'gregoria-tunjung', 'susi-susanti',
-        'zhang-ning', 'wang-yihan', 'li-xuerui', 'saina-nehwal', 'nozomi-okuhara',
-        'tai-tzu-ying', 'ratchanok-intanon', 'gao-ling', 'matsumoto-mayu',
-        'chen-qingchen', 'huang-yaqiong', 'liliyana-natsir',
-    ];
-    if (femaleSlugs.includes(slug))
-        return 'F';
-    return 'H';
+    return null;
 }
 async function scrapePlayer(entry) {
     const errors = [];
@@ -156,7 +147,10 @@ async function scrapePlayer(entry) {
         const rankingNum = rankingRaw ? parseHighestRanking(rankingRaw) : null;
         if (!rankingNum)
             warnings.push('best ranking missing');
-        const gender = detectGender(entry.wikiSlug, introText, categories, entry.slug);
+        const gender = entry.gender ?? detectGender(introText, categories) ?? 'H';
+        if (!entry.gender && !detectGender(introText, categories)) {
+            warnings.push('gender not detected, defaulting to H');
+        }
         const discipline = detectDiscipline(introText, categories);
         const isRetired = detectRetired(introText, categories);
         const olympicMedal = extractOlympicMedal($, introText, categories);
@@ -164,7 +158,7 @@ async function scrapePlayer(entry) {
         const proStartDecade = detectProStartDecade(introText, fields, birthYear);
         const ageBracket = age !== null ? ageToBracket(age) : '30-35';
         const heightBracket = heightCm !== null ? heightToBracket(heightCm) : '175-180';
-        const bestRanking = rankingNum !== null ? rankingToTier(rankingNum) : 'Top 20';
+        const bestRanking = rankingNum !== null ? rankingToTier(rankingNum) : 'Top 50';
         const majorTitles = titlesToTier(titlesCount);
         const bestOlympicMedal = olympicMedal;
         // Download image (skip in dry-run)

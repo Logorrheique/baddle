@@ -68,10 +68,10 @@ describe('todayString', () => {
 
 describe('getPuzzleNumber', () => {
   it('is 1 on epoch date', () => {
-    expect(getPuzzleNumber(PLAYERS, new Date(2026, 0, 1))).toBe(1);
+    expect(getPuzzleNumber(new Date(2026, 0, 1))).toBe(1);
   });
 
   it('is 2 on Jan 2', () => {
-    expect(getPuzzleNumber(PLAYERS, new Date(2026, 0, 2))).toBe(2);
+    expect(getPuzzleNumber(new Date(2026, 0, 2))).toBe(2);
   });
 });

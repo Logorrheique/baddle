@@ -23,13 +23,19 @@ export function heightToBracket(cm) {
 export function rankingToTier(rank) {
     if (rank === 1)
         return 'N°1';
-    if (rank <= 3)
+    if (rank === 2)
+        return 'Top 2';
+    if (rank === 3)
         return 'Top 3';
-    if (rank <= 5)
+    if (rank === 4)
+        return 'Top 4';
+    if (rank === 5)
         return 'Top 5';
     if (rank <= 10)
         return 'Top 10';
-    return 'Top 20';
+    if (rank <= 20)
+        return 'Top 20';
+    return 'Top 50';
 }
 export function titlesToTier(count) {
     if (count === 0)

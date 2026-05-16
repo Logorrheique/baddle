@@ -45,9 +45,11 @@ export function todayString(date: Date = new Date()): string {
 /**
  * Returns the daily player for the given list of players and optional date.
  * Identical for all users on the same calendar day (local time).
+ * `seed` allows independent shuffles per mode (intl vs fr) so the two modes
+ * pick a different player on most days.
  */
-export function getDailyPlayer(players: Player[], date: Date = new Date()): Player {
-  const shuffled = seededShuffle(players, SEED);
+export function getDailyPlayer(players: Player[], date: Date = new Date(), seed: number = SEED): Player {
+  const shuffled = seededShuffle(players, seed);
   const days = daysSinceEpoch(date);
   const index = ((days % shuffled.length) + shuffled.length) % shuffled.length;
   return shuffled[index];
@@ -56,6 +58,6 @@ export function getDailyPlayer(players: Player[], date: Date = new Date()): Play
 /**
  * Returns the puzzle number (1-indexed) for a given date.
  */
-export function getPuzzleNumber(_players: Player[], date: Date = new Date()): number {
+export function getPuzzleNumber(date: Date = new Date()): number {
   return daysSinceEpoch(date) + 1;
 }

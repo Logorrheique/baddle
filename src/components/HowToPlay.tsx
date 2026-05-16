@@ -1,46 +1,46 @@
+import type { Language } from '../types/player.ts';
+import { useEscapeKey } from '../hooks/useEscapeKey.ts';
+import { t } from '../lib/i18n.ts';
+
 interface HowToPlayProps {
   onClose: () => void;
+  lang: Language;
 }
 
-export function HowToPlay({ onClose }: HowToPlayProps) {
+export function HowToPlay({ onClose, lang }: HowToPlayProps) {
+  useEscapeKey(onClose);
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="howto-title">
       <div
-        className="bg-game-card rounded-card p-6 max-w-sm w-full shadow-2xl border border-game-border"
+        className="bg-court-dark rounded-card p-6 max-w-sm w-full shadow-2xl border border-court-line max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold text-game-text text-center mb-4">Comment jouer</h2>
-        <div className="space-y-3 text-sm text-game-muted mb-5">
-          <p>
-            Devine le <span className="text-game-text font-semibold">joueur ou la joueuse de badminton</span> mystère
-            parmi 50 légendes du sport.
-          </p>
-          <p>Chaque essai révèle des indices sur 12 attributs :</p>
+        <h2 id="howto-title" className="text-lg font-bold text-shuttle-white text-center uppercase tracking-widest mb-4">
+          {t('how.title', lang)}
+        </h2>
+        <div className="space-y-3 text-sm text-shuttle-feather mb-5">
+          <p>{t('how.intro', lang, t('how.player', lang))}</p>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-cell bg-game-correct inline-flex items-center justify-center text-white text-xs flex-shrink-0">✓</span>
-              <span><span className="text-game-text">Vert</span> — attribut identique</span>
+              <span className="w-7 h-7 rounded-cell bg-ace-green inline-flex items-center justify-center text-white text-xs flex-shrink-0 font-bold">✓</span>
+              <span>{t('how.green', lang)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-cell bg-game-partial inline-flex items-center justify-center text-white text-xs flex-shrink-0">~</span>
-              <span><span className="text-game-text">Orange</span> — proche (même continent, palier adjacent)</span>
+              <span className="w-7 h-7 rounded-cell bg-racket-orange inline-flex items-center justify-center text-white text-xs flex-shrink-0 font-bold">~</span>
+              <span>{t('how.orange', lang)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-cell bg-game-incorrect inline-flex items-center justify-center text-white text-xs flex-shrink-0">✗</span>
-              <span><span className="text-game-text">Gris</span> — incorrect</span>
+              <span className="w-7 h-7 rounded-cell bg-miss-grey inline-flex items-center justify-center text-white text-xs flex-shrink-0 font-bold">✗</span>
+              <span>{t('how.grey', lang)}</span>
             </div>
           </div>
-          <p>
-            Les flèches <span className="text-white">⬆️ ⬇️</span> indiquent si la valeur cible est
-            plus grande ou plus petite pour les attributs numériques.
-          </p>
-          <p>Un nouveau joueur est proposé chaque jour à minuit.</p>
+          <p>{t('how.arrows', lang)}</p>
         </div>
         <button
           onClick={onClose}
-          className="w-full py-2 rounded-card bg-blue-600 text-white font-semibold hover:bg-blue-500 transition-colors text-sm"
+          className="w-full py-3 rounded-card bg-shuttle-white text-court-dark font-bold uppercase tracking-wider hover:opacity-90 transition-opacity text-sm"
         >
-          Jouer
+          {t('how.cta', lang)}
         </button>
       </div>
     </div>

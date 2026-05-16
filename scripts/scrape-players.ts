@@ -97,7 +97,7 @@ function yearToDecade(year: number): Decade {
   return '2020s';
 }
 
-function detectGender(_wikiSlug: string, introText: string, categories: string[], slug: string): 'H' | 'F' {
+function detectGender(introText: string, categories: string[]): 'H' | 'F' | null {
   const combined = (introText + ' ' + categories.join(' ')).toLowerCase();
 
   const femaleSignals = ["women's", 'female badminton', ' she ', ' her badminton', 'female player'];
@@ -106,16 +106,7 @@ function detectGender(_wikiSlug: string, introText: string, categories: string[]
   const maleSignals = ["men's", ' he ', ' his badminton', 'male player'];
   if (maleSignals.some(s => combined.includes(s))) return 'H';
 
-  const femaleSlugs = [
-    'an-seyoung', 'carolina-marin', 'pv-sindhu', 'chen-yufei', 'akane-yamaguchi',
-    'he-bingjiao', 'pornpawee-chochuwong', 'gregoria-tunjung', 'susi-susanti',
-    'zhang-ning', 'wang-yihan', 'li-xuerui', 'saina-nehwal', 'nozomi-okuhara',
-    'tai-tzu-ying', 'ratchanok-intanon', 'gao-ling', 'matsumoto-mayu',
-    'chen-qingchen', 'huang-yaqiong', 'liliyana-natsir',
-  ];
-  if (femaleSlugs.includes(slug)) return 'F';
-
-  return 'H';
+  return null;
 }
 
 async function scrapePlayer(entry: PlayerEntry): Promise<ScrapeResult> {
@@ -168,7 +159,10 @@ async function scrapePlayer(entry: PlayerEntry): Promise<ScrapeResult> {
     const rankingNum = rankingRaw ? parseHighestRanking(rankingRaw) : null;
     if (!rankingNum) warnings.push('best ranking missing');
 
-    const gender = detectGender(entry.wikiSlug, introText, categories, entry.slug);
+    const gender = entry.gender ?? detectGender(introText, categories) ?? 'H';
+    if (!entry.gender && !detectGender(introText, categories)) {
+      warnings.push('gender not detected, defaulting to H');
+    }
     const discipline = detectDiscipline(introText, categories);
     const isRetired = detectRetired(introText, categories);
     const olympicMedal = extractOlympicMedal($, introText, categories);
@@ -177,7 +171,7 @@ async function scrapePlayer(entry: PlayerEntry): Promise<ScrapeResult> {
 
     const ageBracket: AgeBracket = age !== null ? ageToBracket(age) : '30-35';
     const heightBracket: HeightBracket = heightCm !== null ? heightToBracket(heightCm) : '175-180';
-    const bestRanking: RankingTier = rankingNum !== null ? rankingToTier(rankingNum) : 'Top 20';
+    const bestRanking: RankingTier = rankingNum !== null ? rankingToTier(rankingNum) : 'Top 50';
     const majorTitles: TitlesTier = titlesToTier(titlesCount);
     const bestOlympicMedal: OlympicMedal = olympicMedal;
 
