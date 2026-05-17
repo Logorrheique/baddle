@@ -2,20 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://baddle.app/</loc>
+    <loc>https://baddle.up.railway.app/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://baddle.app/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://baddle.app/"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://baddle.app/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://baddle.up.railway.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://baddle.up.railway.app/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://baddle.up.railway.app/"/>
   </url>
   <url>
-    <loc>https://baddle.app/about</loc>
+    <loc>https://baddle.up.railway.app/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://baddle.app/legal</loc>
+    <loc>https://baddle.up.railway.app/legal</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

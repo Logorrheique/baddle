@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /players/
 
-Sitemap: https://baddle.app/sitemap.xml
+Sitemap: https://baddle.up.railway.app/sitemap.xml
