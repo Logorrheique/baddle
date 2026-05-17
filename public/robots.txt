@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /players/
+
+Sitemap: https://baddle.app/sitemap.xml
