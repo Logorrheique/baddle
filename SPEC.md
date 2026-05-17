@@ -359,7 +359,7 @@ Structure du projet
 Comment ajouter un joueur (format JSON attendu)
 Crédits (données BWF)
 
-16. Critères d'acceptation (à valider par Claude Code)
+16. Critères d'acceptation
 
  Le projet build sans erreur (npm run build)
  TypeScript strict mode activé, aucun any
