@@ -2,16 +2,75 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Baddle — Devine le joueur de badminton du jour</title>
-    <meta name="description" content="Un jeu quotidien pour les fans de badminton. Devine le joueur ou la joueuse mystère parmi 50 légendes." />
-    <meta property="og:title" content="Baddle — Devine le joueur de badminton du jour" />
-    <meta property="og:description" content="Un jeu quotidien pour les fans de badminton. Devine le joueur ou la joueuse mystère parmi 50 légendes." />
+    <meta name="theme-color" content="#1c1917" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+
+    <title>Baddle 🏸 — Le Wordle du badminton, joueur mystère du jour</title>
+    <meta name="description" content="Devine le joueur ou la joueuse de badminton mystère du jour parmi 130 légendes du circuit BWF. Inspiré de Wordle, deux modes : International et France." />
+    <meta name="keywords" content="baddle, badminton, wordle, jeu, quiz, BWF, joueurs, France, international, daily, sport" />
+    <meta name="author" content="Logo" />
+    <link rel="canonical" href="https://baddle.app/" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Baddle" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:url" content="https://baddle.app/" />
+    <meta property="og:title" content="Baddle 🏸 — Le Wordle du badminton" />
+    <meta property="og:description" content="Devine le joueur mystère du jour parmi 130 légendes du badminton. Modes International et France." />
+    <meta property="og:image" content="https://baddle.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Baddle — Le Wordle du badminton, grille de jeu colorée vert et jaune sur fond sombre" />
+    <meta property="og:image:type" content="image/png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Baddle 🏸 — Le Wordle du badminton" />
+    <meta name="twitter:description" content="Devine le joueur mystère du jour parmi 130 légendes du badminton." />
+    <meta name="twitter:image" content="https://baddle.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Baddle — Le Wordle du badminton" />
+
+    <!-- Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://flagcdn.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Game",
+      "name": "Baddle",
+      "alternateName": "The Badminton Wordle",
+      "description": "Devine le joueur ou la joueuse de badminton mystère du jour parmi 130 légendes du circuit BWF.",
+      "url": "https://baddle.app/",
+      "image": "https://baddle.app/og-image.png",
+      "applicationCategory": "Game",
+      "operatingSystem": "Web",
+      "inLanguage": ["fr", "en"],
+      "genre": "Puzzle game",
+      "isAccessibleForFree": true,
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Badminton fans"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Logo"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
