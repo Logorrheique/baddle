@@ -179,7 +179,14 @@ Config : `vercel.json` (rewrites SPA inclus).
 
 - Fiches joueurs · taille · classement → [Wikipedia](https://en.wikipedia.org) (CC BY-SA 4.0)
 - Photos → [Wikimedia Commons](https://commons.wikimedia.org) (licences libres)
-- Inspiration → [Wordle](https://www.nytimes.com/games/wordle/index.html) · [Poeltl](https://poeltl.dunk.town) · [Onepiecedle](https://onepiecedle.net) · [Loldle](https://loldle.net)
+
+---
+
+## 🙏 Inspiration
+
+Baddle est largement inspiré de **[Onedle](https://onedle.site/)** par **[@ekazukii](https://github.com/ekazukii/onedle)** : même concept "devine le perso du jour via attributs comparés", même rythme quotidien, mêmes proportions de grille. Si tu joues à Baddle, va voir Onedle — c'est l'original.
+
+Autres références : [Wordle](https://www.nytimes.com/games/wordle/index.html) (la palette + l'idée de base) · [Poeltl](https://poeltl.dunk.town) (NBA) · [Loldle](https://loldle.net) (League of Legends).
 
 ---
 
