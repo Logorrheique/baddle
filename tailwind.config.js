@@ -11,7 +11,7 @@ export default {
         'shuttle-white':  '#fafaf9',
         'shuttle-feather':'#a8a29e',
         'ace-green':      '#6aaa64',
-        'racket-orange':  '#c9b458',
+        'racket-orange':  '#f97316',
         'miss-grey':      '#78716c',
       },
       fontFamily: {

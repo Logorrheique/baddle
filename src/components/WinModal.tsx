@@ -36,7 +36,7 @@ function useCountdown() {
 
 // Decorative confetti particles
 function ConfettiBurst() {
-  const colors = ['#6aaa64', '#c9b458', '#fafaf9', '#3a3431'];
+  const colors = ['#6aaa64', '#f97316', '#fafaf9', '#3a3431'];
   const pieces = Array.from({ length: 24 }, (_, i) => ({
     left: `${(i / 24) * 100}%`,
     delay: `${Math.random() * 0.4}s`,
