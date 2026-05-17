@@ -7,6 +7,7 @@ import { GuessTable } from './components/GuessTable.tsx';
 import { WinModal } from './components/WinModal.tsx';
 import { StatsModal } from './components/StatsModal.tsx';
 import { HowToPlay } from './components/HowToPlay.tsx';
+import { SuggestionModal } from './components/SuggestionModal.tsx';
 import { getDailyPlayer, getPuzzleNumber } from './lib/dailyPlayer.ts';
 import { loadMode, saveMode, loadLanguage, saveLanguage } from './lib/storage.ts';
 import { t } from './lib/i18n.ts';
@@ -50,6 +51,7 @@ function GamePage({ lang, handleLangChange }: { lang: Language; handleLangChange
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showWin, setShowWin] = useState(false);
+  const [showSuggest, setShowSuggest] = useState(false);
   const [mode, setMode] = useState<GameMode>(() => loadMode());
 
   const players = useMemo(() => playersFor(mode), [mode]);
@@ -117,10 +119,14 @@ function GamePage({ lang, handleLangChange }: { lang: Language; handleLangChange
         <span>🏸 #{getPuzzleNumber()}</span>
         <Link to="/about" className="hover:text-shuttle-white transition-colors">{t('app.about', lang)}</Link>
         <Link to="/legal" className="hover:text-shuttle-white transition-colors">{t('app.legal', lang)}</Link>
+        <button type="button" onClick={() => setShowSuggest(true)} className="hover:text-shuttle-white transition-colors">
+          💡 {lang === 'fr' ? 'Suggérer' : 'Suggest'}
+        </button>
       </footer>
 
       {showHowToPlay && <HowToPlay lang={lang} onClose={() => setShowHowToPlay(false)} />}
       {showStats && <StatsModal lang={lang} stats={stats} onClose={() => setShowStats(false)} />}
+      {showSuggest && <SuggestionModal lang={lang} onClose={() => setShowSuggest(false)} />}
       {won && showWin && (
         <WinModal
           target={dailyPlayer}
