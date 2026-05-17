@@ -1,91 +1,169 @@
-# Baddle 🏸
+<div align="center">
 
-Jeu quotidien type Wordle pour les fans de badminton. Devine le joueur ou la joueuse mystère parmi 100 légendes du circuit professionnel.
+# 🏸 Baddle
 
-## Stack
+**Le Wordle du badminton — devine le joueur ou la joueuse mystère du jour parmi 130 légendes du circuit BWF.**
 
-- **React 18** + **TypeScript** + **Vite**
-- **TailwindCSS** (palette Wordle-like, dark mode warm stone)
-- **Vitest** pour les tests unitaires
-- Scraping Wikipedia via **axios** + **cheerio** + **sharp** (resize images)
+![Baddle preview](public/og-image.png)
 
-## Installation & développement
+[**🎮 Jouer maintenant**](https://baddle.up.railway.app)
 
-```bash
-npm install
-npm run dev       # Serveur de développement http://localhost:5173
-npm run build     # Build de production dans dist/
-npm run preview   # Prévisualiser le build
-```
+[![Vite 6.4](https://img.shields.io/badge/Vite-6.4-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
+[![React 18](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind](https://img.shields.io/badge/Tailwind-3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Tests](https://img.shields.io/badge/tests-97%20passing-6aaa64)](#tests)
 
-## Tests
+</div>
 
-```bash
-npm test          # Tous les tests (parsers, transforms, comparison, dailyPlayer)
-npm run test:watch
-```
+---
 
-## Scraping des données
+## ✨ Fonctionnalités
 
-Les données des joueurs sont dans `src/data/players.json` (généré). Pour les régénérer :
+- **130 joueurs** scrapés et validés depuis Wikipedia (BWF + légendes historiques)
+- **Deux modes de jeu** :
+  - 🌍 **International** — 100+ joueurs du monde entier
+  - 🇫🇷 **France** — 30 joueurs français (ancien⋅ne⋅s et actuel⋅le⋅s)
+- **8 attributs comparés** : genre, continent, statut, discipline, main, âge, taille, classement BWF
+- **Indices directionnels** ↑↓ sur les attributs ordinaux (âge, taille, classement)
+- **Tier classement fin** : `N°1` · `Top 2` · `Top 3` · `Top 4` · `Top 5` · `Top 10` · `Top 20` · `Top 50`
+- **Bilingue FR/EN** avec switcher live (formes féminines droitière/gauchère)
+- **Animations** : flip à la révélation, célébration + confetti à la victoire
+- **Stats séparées par mode** (parties, victoires, série, distribution)
+- **Partage** via texte emoji façon Wordle (🟩🟧⬛)
+- **Joueur du jour différent** par mode (seeds indépendants)
+- **PWA installable** avec manifest + icons maskables
+- **Mobile-first**, accessible (ARIA dialogs, ESC pour fermer, focus-visible)
 
-```bash
-npm run scrape:dry      # Dry-run (3 joueurs test, sans téléchargement images)
-npm run scrape          # Scraping complet (~100 joueurs + images)
-npm run validate-data   # Vérifie l'intégrité du JSON
-```
+---
 
-Le rapport de scraping est écrit dans `scripts/logs/scraping-report.md` (succès/échecs/warnings/distribution).
+## 🎨 Direction artistique
 
-## Ajouter un joueur
+Palette Wordle officielle sur fond stone warm, cellules carrées avec animation flip 3D.
 
-1. Ajouter une entrée dans `scripts/players-list.ts` :
-   ```typescript
-   { slug: 'nom-joueur', wikiSlug: 'Nom_Wikipedia', gender: 'H' | 'F' }
-   ```
-   Le `gender` est optionnel mais recommandé (sinon détection heuristique sur le texte de l'intro).
-2. Relancer `npm run scrape`
-3. Si nécessaire, corriger des champs dans `scripts/manual-overrides.yaml` (ex. : status retraité, titres, médailles)
-4. Relancer `npm run validate-data`
-
-## Direction artistique
-
-Palette Wordle officielle, fond stone-900 warm :
-
-| Token | Valeur | Usage |
-|-------|--------|-------|
+| Token | Hex | Usage |
+|-------|-----|-------|
 | `court-dark` | `#1c1917` | Fond principal |
-| `court-mid` | `#292524` | Cards / inputs |
-| `court-surface` | `#3a3431` | Hover, surface élevée |
+| `court-mid` | `#292524` | Cards, inputs, modales |
+| `court-surface` | `#3a3431` | Hover, surfaces élevées |
 | `court-line` | `#44403c` | Bordures |
 | `shuttle-white` | `#fafaf9` | Texte primaire |
 | `shuttle-feather` | `#a8a29e` | Texte secondaire |
-| `ace-green` | `#6aaa64` | Correct (Wordle green) |
-| `racket-orange` | `#c9b458` | Partial (Wordle yellow) |
-| `miss-grey` | `#78716c` | Incorrect |
+| `ace-green` | `#6aaa64` | ✓ Correct |
+| `racket-orange` | `#f97316` | ~ Proche |
+| `miss-grey` | `#78716c` | ✗ Incorrect |
 
-Cellules carrées (aspect-square) avec bordures 2px et animation flip à la révélation, proportions inspirées de [onepiecedle.net](https://onepiecedle.net/classic).
+Proportions inspirées de [onepiecedle.net](https://onepiecedle.net/classic) : grille uniforme 9 colonnes carrées, search 70px de hauteur, container `w-[90%] max-w-3xl`.
 
-## Déploiement
+---
 
-### Railway (production)
-
-Le projet est configuré pour Railway via `railway.json` + `serve` (statique SPA).
+## 🚀 Quick start
 
 ```bash
-# Première fois (CLI)
-railway login
-railway link              # lier au projet existant ou en créer un
-railway up                # déploie depuis la branche locale
+git clone https://github.com/Logorrheique/baddle.git
+cd baddle
+npm install
+npm run dev          # http://localhost:5173
 ```
 
-Configuration appliquée :
-- **Build** : `npm ci && npm run build` (Nixpacks auto-detect Node ≥20)
-- **Start** : `npm start` → `serve -s dist -l $PORT` (SPA fallback inclus)
-- **Healthcheck** : `GET /` doit répondre 200 sous 60s
-- **Restart policy** : 3 retries en cas d'échec
+### Scripts
 
-Variables d'environnement : aucune requise (`PORT` injecté par Railway).
+| Commande | Description |
+|----------|-------------|
+| `npm run dev` | Serveur de développement Vite |
+| `npm run build` | Build de production dans `dist/` |
+| `npm run preview` | Preview du build prod en local |
+| `npm start` | Sert `dist/` via `serve -s` (utilisé en prod Railway) |
+| `npm test` | Lance tous les tests (Vitest) |
+| `npm run test:watch` | Tests en mode watch |
+| `npm run scrape:dry` | Scrape de test (3 joueurs, sans téléchargement images) |
+| `npm run scrape` | Scrape complet (~130 joueurs + photos) |
+| `npm run validate-data` | Vérifie l'intégrité de `players.json` |
+| `npm run lint` | ESLint |
+
+---
+
+## 🗂️ Architecture
+
+```
+src/
+├── components/         React components (Header, GuessTable, modals…)
+├── lib/
+│   ├── comparison.ts   Comparaison joueur deviné vs cible (correct/partial/incorrect)
+│   ├── dailyPlayer.ts  Hash date → joueur du jour (seed par mode)
+│   ├── i18n.ts         Dictionnaire FR/EN + display values traduits
+│   ├── share.ts        Génération texte emoji pour partage
+│   └── storage.ts      localStorage (par mode : game state + stats + lang)
+├── hooks/              useGameState, useStats, useEscapeKey
+├── types/player.ts     Types TypeScript (Gender, Continent, RankingTier…)
+└── data/players.json   Base de données générée par le scraper
+
+scripts/
+├── scrape-players.ts   Pipeline principal de scraping
+├── players-list.ts     Liste source { slug, wikiSlug, gender } × ~130
+├── extract-infobox.ts  Parse infobox Wikipedia
+├── parsers.ts          parseBirthDate, parseHeight, parseHandedness…
+├── transforms.ts       ageToBracket, heightToBracket, rankingToTier
+├── detect-discipline.ts Simple/Double/Mixte + status retraité
+├── olympic-medals.ts   Or/Argent/Bronze/Aucune
+├── count-titles.ts     0/1-3/4-9/10-19/20+
+├── apply-overrides.ts  Applique manual-overrides.yaml
+├── manual-overrides.yaml  Corrections manuelles validées
+├── download-image.ts   Sharp resize 400×400 JPG
+└── schema.ts           Zod validation post-overrides
+
+public/players/         Photos des joueurs (400×400 JPG)
+```
+
+---
+
+## 🤖 Ajouter un joueur
+
+1. Ajouter une entrée dans `scripts/players-list.ts` :
+   ```ts
+   { slug: 'nom-joueur', wikiSlug: 'Nom_Wikipedia', gender: 'H' }
+   ```
+2. `npm run scrape`
+3. Si certains champs sont incorrects, surcharger dans `scripts/manual-overrides.yaml` :
+   ```yaml
+   nom-joueur:
+     status: "Retraité"
+     bestRanking: "Top 5"
+   ```
+4. `npm run validate-data`
+
+---
+
+## 🧪 Tests
+
+97 tests unitaires couvrant la logique pure :
+
+- **comparison** — états correct/partial/incorrect, arrows ordinaux
+- **dailyPlayer** — déterminisme, daysSinceEpoch, getPuzzleNumber
+- **parsers** — birthDate, height, handedness, ranking
+- **transforms** — brackets âge/taille, tiers ranking/titres
+
+```bash
+npm test
+```
+
+---
+
+## 🚢 Déploiement
+
+### Railway (production active)
+
+```bash
+railway login
+railway link
+railway up
+```
+
+Config : `railway.json` (Nixpacks · build `npm run build` · start `npm start` · healthcheck `/`).
+
+### Cloudflare Pages
+
+Production branch = `master`. Build automatique via wrangler 4.x avec auto-detection Vite.
 
 ### Vercel (alternative)
 
@@ -93,40 +171,20 @@ Variables d'environnement : aucune requise (`PORT` injecté par Railway).
 vercel --prod
 ```
 
-Config : `vercel.json` (framework Vite + rewrites SPA).
+Config : `vercel.json` (rewrites SPA inclus).
 
-## Sources des données
+---
 
-- Fiches joueurs : [Wikipedia](https://en.wikipedia.org) (CC BY-SA)
-- Photos : [Wikimedia Commons](https://commons.wikimedia.org) (licences libres)
-- Classements et titres : agrégés depuis l'intro Wikipedia + overrides manuels
+## 📚 Sources
 
-## Structure
+- Fiches joueurs · taille · classement → [Wikipedia](https://en.wikipedia.org) (CC BY-SA 4.0)
+- Photos → [Wikimedia Commons](https://commons.wikimedia.org) (licences libres)
+- Inspiration → [Wordle](https://www.nytimes.com/games/wordle/index.html) · [Poeltl](https://poeltl.dunk.town) · [Onepiecedle](https://onepiecedle.net) · [Loldle](https://loldle.net)
 
-```
-src/
-  components/     # React components (Header, SearchInput, GuessRow, AttributeCell, modals)
-  lib/            # Logique métier (comparison, dailyPlayer, storage, share)
-  hooks/          # useGameState, useStats, useEscapeKey
-  data/           # players.json (généré par le scraper)
-  types/          # TypeScript types (Player, Gender, Continent, etc.)
-scripts/
-  scrape-players.ts     # Pipeline principal de scraping
-  players-list.ts       # Liste des ~100 joueurs (slug + wikiSlug + gender)
-  parsers.ts            # Parsing Wikipedia (date, taille, classement, etc.)
-  transforms.ts         # Conversions valeurs exactes → brackets/tiers
-  detect-discipline.ts  # Détection Simple/Double/Double mixte + status retraité
-  olympic-medals.ts     # Extraction médailles olympiques
-  count-titles.ts       # Compte des titres majeurs (BWF World Tour Finals, All England, etc.)
-  apply-overrides.ts    # Applique manual-overrides.yaml par-dessus le scrape
-  manual-overrides.yaml # Corrections manuelles (status, titles, medals)
-  schema.ts             # Zod schema validateur post-overrides
-  logs/                 # Rapport de scraping généré
-public/
-  players/        # Photos 400x400 JPG (resized par sharp)
-```
+---
 
-## Crédits
+<div align="center">
 
-Données Wikipedia sous licence [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-Inspiré par [Wordle](https://www.nytimes.com/games/wordle/index.html), [Poeltl](https://poeltl.dunk.town/) et [Onepiecedle](https://onepiecedle.net/).
+Made with 🏸 by [Logorrheique](https://github.com/Logorrheique)
+
+</div>
