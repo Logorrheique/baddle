@@ -42,10 +42,16 @@ export function SearchInput({ players, excluded, onSelect, disabled, lang }: Sea
   const listRef = useRef<HTMLUListElement>(null);
 
   const suggestions = players
-    .filter(p => !excluded.has(p.id) && fuzzyMatch(query, p.name))
-    .slice(0, 8);
+    .filter(p => !excluded.has(p.id) && fuzzyMatch(query, p.name));
 
   useEffect(() => { setHighlighted(0); }, [query]);
+
+  // Keep keyboard-highlighted item visible inside the scrollable dropdown
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    const li = listRef.current.querySelectorAll('[role="option"]')[highlighted] as HTMLElement | undefined;
+    li?.scrollIntoView({ block: 'nearest' });
+  }, [highlighted, open]);
 
   const confirm = useCallback((player: Player) => {
     onSelect(player);
@@ -83,7 +89,7 @@ export function SearchInput({ players, excluded, onSelect, disabled, lang }: Sea
         <ul
           ref={listRef}
           role="listbox"
-          className="absolute z-20 w-full mt-2 bg-court-mid border border-court-line rounded-card shadow-2xl overflow-hidden"
+          className="absolute z-20 w-full mt-2 bg-court-mid border border-court-line rounded-card shadow-2xl overflow-y-auto overscroll-contain max-h-[60vh]"
         >
           {suggestions.map((p, i) => (
             <li
