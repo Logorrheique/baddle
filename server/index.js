@@ -1,0 +1,187 @@
+/**
+ * Production server: serves the Vite-built SPA from /dist and exposes
+ * a single API endpoint that runs the daily-player comparison server-side.
+ *
+ * Suggestions are NOT handled here — the in-app form opens GitHub's own
+ * "new issue" page pre-filled, so there is no secret to store and no
+ * abuse surface to defend.
+ *
+ * Required env vars (Railway → Variables):
+ *   PORT                       (injected by Railway)
+ *   DAILY_SEED_INTL            integer, hidden seed for INTL shuffle
+ *   DAILY_SEED_FR              integer, hidden seed for FR shuffle
+ *   DAILY_SEED_FALLBACK_OFFSET integer, applied if INTL and FR pick the same player
+ *   ALLOWED_ORIGINS            optional, comma-separated; restricts /api/guess origin
+ */
+import express from 'express';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+import { readFileSync } from 'fs';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DIST = resolve(__dirname, '../dist');
+const PLAYERS_JSON = resolve(__dirname, '../src/data/players.json');
+const PLAYERS = JSON.parse(readFileSync(PLAYERS_JSON, 'utf-8'));
+const PLAYERS_BY_ID = new Map(PLAYERS.map(p => [p.id, p]));
+const FR_PLAYERS = PLAYERS.filter(p => p.country === 'France');
+// ─── Daily player (seeds in env vars so they stay out of the client) ─
+const SEED_INTL = Number(process.env.DAILY_SEED_INTL ?? 42);
+const SEED_FR = Number(process.env.DAILY_SEED_FR ?? 1042);
+const SEED_FALLBACK_OFFSET = Number(process.env.DAILY_SEED_FALLBACK_OFFSET ?? 7919);
+const EPOCH_DATE = new Date('2026-01-01T00:00:00Z');
+function seededShuffle(arr, seed) {
+    const r = [...arr];
+    let s = seed;
+    for (let i = r.length - 1; i > 0; i--) {
+        s = (s * 1664525 + 1013904223) & 0xffffffff;
+        const j = Math.abs(s) % (i + 1);
+        [r[i], r[j]] = [r[j], r[i]];
+    }
+    return r;
+}
+function daysSinceEpoch(date = new Date()) {
+    const local = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const epoch = new Date(EPOCH_DATE.getUTCFullYear(), EPOCH_DATE.getUTCMonth(), EPOCH_DATE.getUTCDate());
+    return Math.floor((local.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
+}
+function pick(players, seed, date) {
+    const shuffled = seededShuffle(players, seed);
+    const days = daysSinceEpoch(date);
+    const index = ((days % shuffled.length) + shuffled.length) % shuffled.length;
+    return shuffled[index];
+}
+function dailyPlayer(mode, date = new Date()) {
+    const frPick = pick(FR_PLAYERS, SEED_FR, date);
+    if (mode === 'fr')
+        return frPick;
+    let intlPick = pick(PLAYERS, SEED_INTL, date);
+    if (intlPick.id === frPick.id) {
+        intlPick = pick(PLAYERS, SEED_INTL + SEED_FALLBACK_OFFSET, date);
+    }
+    return intlPick;
+}
+const AGE_ORDER = ['<25', '25-30', '30-35', '35-40', '>40'];
+const HEIGHT_ORDER = ['<170', '170-175', '175-180', '180-185', '>185'];
+const RANKING_ORDER = ['Top 50', 'Top 20', 'Top 10', 'Top 5', 'Top 4', 'Top 3', 'Top 2', 'N°1'];
+function ordinal(order, g, t) {
+    if (g === t)
+        return { state: 'correct', arrow: null };
+    const gi = order.indexOf(g);
+    const ti = order.indexOf(t);
+    const arrow = gi < ti ? 'up' : 'down';
+    return { state: Math.abs(gi - ti) === 1 ? 'partial' : 'incorrect', arrow };
+}
+function exact(g, t) {
+    return { state: g === t ? 'correct' : 'incorrect', arrow: null };
+}
+function compare(guess, target) {
+    return {
+        gender: exact(guess.gender, target.gender),
+        country: exact(guess.country, target.country),
+        status: exact(guess.status, target.status),
+        discipline: exact(guess.discipline, target.discipline),
+        hand: exact(guess.hand, target.hand),
+        ageBracket: ordinal(AGE_ORDER, guess.ageBracket, target.ageBracket),
+        heightBracket: ordinal(HEIGHT_ORDER, guess.heightBracket, target.heightBracket),
+        bestRanking: ordinal(RANKING_ORDER, guess.bestRanking, target.bestRanking),
+    };
+}
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+const GUESS_BUCKETS = new Map();
+const GUESS_HOURLY = 60;
+const GUESS_DAILY = 200;
+function checkGuessRate(ip) {
+    const now = Date.now();
+    const bucket = GUESS_BUCKETS.get(ip) ?? { hits: [] };
+    bucket.hits = bucket.hits.filter(ts => now - ts < DAY_MS);
+    const lastHour = bucket.hits.filter(ts => now - ts < HOUR_MS).length;
+    if (lastHour >= GUESS_HOURLY) {
+        const oldest = bucket.hits[bucket.hits.length - GUESS_HOURLY];
+        return { ok: false, retryAfter: Math.ceil((oldest + HOUR_MS - now) / 1000) };
+    }
+    if (bucket.hits.length >= GUESS_DAILY) {
+        const oldest = bucket.hits[0];
+        return { ok: false, retryAfter: Math.ceil((oldest + DAY_MS - now) / 1000) };
+    }
+    bucket.hits.push(now);
+    GUESS_BUCKETS.set(ip, bucket);
+    return { ok: true };
+}
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, b] of GUESS_BUCKETS) {
+        b.hits = b.hits.filter(ts => now - ts < DAY_MS);
+        if (b.hits.length === 0)
+            GUESS_BUCKETS.delete(ip);
+    }
+}, HOUR_MS).unref();
+// ─── App ───────────────────────────────────────────────────────────
+const app = express();
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+app.use(express.json({ limit: '8kb' }));
+function getClientIp(req) {
+    return req.headers['cf-connecting-ip']
+        ?? req.headers['x-real-ip']
+        ?? req.ip
+        ?? 'unknown';
+}
+function originAllowed(req, allowed) {
+    if (allowed.length === 0)
+        return true;
+    const origin = req.headers.origin ?? '';
+    const referer = req.headers.referer ?? '';
+    return allowed.some(a => origin === a || referer.startsWith(a + '/') || referer === a);
+}
+app.post('/api/guess', (req, res) => {
+    const allowed = (process.env.ALLOWED_ORIGINS ?? '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!originAllowed(req, allowed)) {
+        res.status(403).json({ error: 'Origin not allowed' });
+        return;
+    }
+    const body = req.body;
+    if (typeof body?.playerId !== 'string') {
+        res.status(400).json({ error: 'Invalid playerId' });
+        return;
+    }
+    const mode = body.mode === 'fr' ? 'fr' : 'intl';
+    const guess = PLAYERS_BY_ID.get(body.playerId);
+    if (!guess) {
+        res.status(404).json({ error: 'Unknown player' });
+        return;
+    }
+    const ip = getClientIp(req);
+    const rl = checkGuessRate(ip);
+    if (!rl.ok) {
+        res.setHeader('Retry-After', String(rl.retryAfter));
+        res.status(429).json({ error: 'Rate limited', retryAfter: rl.retryAfter });
+        return;
+    }
+    const target = dailyPlayer(mode);
+    const result = compare(guess, target);
+    const isWin = guess.id === target.id;
+    res.json({
+        result,
+        isWin,
+        target: isWin ? target : undefined,
+    });
+});
+// Static assets + SPA fallback
+app.use(express.static(DIST, {
+    maxAge: '1h',
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html'))
+            res.setHeader('Cache-Control', 'no-cache');
+        if (path.includes('/assets/'))
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    },
+}));
+app.use((req, res, next) => {
+    if (req.method !== 'GET')
+        return next();
+    res.sendFile(resolve(DIST, 'index.html'));
+});
+const port = Number(process.env.PORT) || 3000;
+app.listen(port, () => {
+    console.log(`Baddle server listening on :${port} — serving ${DIST}`);
+});

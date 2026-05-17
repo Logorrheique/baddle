@@ -1,5 +1,5 @@
 import type {
-  AgeBracket, HeightBracket, RankingTier, TitlesTier, Continent,
+  AgeBracket, HeightBracket, RankingTier, TitlesTier,
 } from '../src/types/player.js';
 
 export function ageToBracket(age: number): AgeBracket {
@@ -20,10 +20,13 @@ export function heightToBracket(cm: number): HeightBracket {
 
 export function rankingToTier(rank: number): RankingTier {
   if (rank === 1) return 'N°1';
-  if (rank <= 3) return 'Top 3';
-  if (rank <= 5) return 'Top 5';
+  if (rank === 2) return 'Top 2';
+  if (rank === 3) return 'Top 3';
+  if (rank === 4) return 'Top 4';
+  if (rank === 5) return 'Top 5';
   if (rank <= 10) return 'Top 10';
-  return 'Top 20';
+  if (rank <= 20) return 'Top 20';
+  return 'Top 50';
 }
 
 export function titlesToTier(count: number): TitlesTier {
@@ -33,31 +36,6 @@ export function titlesToTier(count: number): TitlesTier {
   if (count <= 19) return '10-19';
   return '20+';
 }
-
-// Country name (English) → Continent
-export const COUNTRY_TO_CONTINENT: Record<string, Continent> = {
-  // Asia
-  China: 'Asie', Japan: 'Asie', 'South Korea': 'Asie', Indonesia: 'Asie',
-  Malaysia: 'Asie', India: 'Asie', Thailand: 'Asie', Taiwan: 'Asie',
-  Singapore: 'Asie', 'Hong Kong': 'Asie', Vietnam: 'Asie', 'Sri Lanka': 'Asie',
-  Bangladesh: 'Asie', Philippines: 'Asie', 'Chinese Taipei': 'Asie',
-  Myanmar: 'Asie', Cambodia: 'Asie', Pakistan: 'Asie',
-  // Europe
-  Denmark: 'Europe', England: 'Europe', Scotland: 'Europe', 'Great Britain': 'Europe',
-  France: 'Europe', Germany: 'Europe', Spain: 'Europe', Netherlands: 'Europe',
-  Sweden: 'Europe', Norway: 'Europe', Finland: 'Europe', Switzerland: 'Europe',
-  Russia: 'Europe', Ukraine: 'Europe', Poland: 'Europe', Belgium: 'Europe',
-  'United Kingdom': 'Europe', Bulgaria: 'Europe', Romania: 'Europe',
-  // Americas
-  'United States': 'Amériques', Canada: 'Amériques', Brazil: 'Amériques',
-  Mexico: 'Amériques', Peru: 'Amériques', Colombia: 'Amériques',
-  Guatemala: 'Amériques', Argentina: 'Amériques', Chile: 'Amériques',
-  // Oceania
-  Australia: 'Océanie', 'New Zealand': 'Océanie',
-  // Africa
-  'South Africa': 'Afrique', Egypt: 'Afrique', Nigeria: 'Afrique',
-  Kenya: 'Afrique', Morocco: 'Afrique', Algeria: 'Afrique',
-};
 
 // Country name (English) → ISO 3166-1 alpha-2
 export const COUNTRY_TO_CODE: Record<string, string> = {

@@ -69,7 +69,6 @@ badmintondle/
 typescript// src/types/player.ts
 
 export type Gender = 'H' | 'F';
-export type Continent = 'Asie' | 'Europe' | 'Amériques' | 'Océanie' | 'Afrique';
 export type Status = 'Actif' | 'Retraité';
 export type Discipline = 'Simple' | 'Double' | 'Double mixte';
 export type Hand = 'Droitier' | 'Gaucher';
@@ -85,7 +84,6 @@ export interface Player {
   name: string;                  // "Viktor Axelsen"
   imageUrl: string | null;       // URL ou null si pas d'image fiable
   gender: Gender;
-  continent: Continent;
   country: string;               // "Danemark"
   countryCode: string;           // "DK" (ISO 3166-1 alpha-2, pour drapeaux)
   status: Status;
@@ -117,14 +115,8 @@ export interface CellResult {
  *   - gender, status, discipline, hand
  *   → 'correct' si identique, sinon 'incorrect'
  * 
- * ATTRIBUT PAYS (avec orange pour même continent) :
+ * ATTRIBUT PAYS pur (vert ou rouge) :
  *   - country
- *   → 'correct' si même pays
- *   → 'partial' si pays différents mais même continent
- *   → 'incorrect' sinon
- * 
- * ATTRIBUT CONTINENT pur (vert ou rouge) :
- *   - continent
  *   → 'correct' si identique, sinon 'incorrect'
  * 
  * ATTRIBUTS ORDONNÉS (avec orange + flèche) :
@@ -232,7 +224,6 @@ Header de ligne : photo + nom du joueur proposé
 12 cellules pour les 12 attributs, dans l'ordre suivant :
 
 Genre
-Continent
 Pays (avec drapeau)
 Statut
 Discipline

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+scripts/cache/
+scripts/logs/
+.git/
+.env
+*.local
+tests/
+vercel.json

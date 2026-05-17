@@ -8,43 +8,30 @@ interface AttributeCellProps {
   state: CellState;
   arrow?: Arrow;
   delay?: number;
-  revealed?: boolean;
+  label?: string;
 }
 
 const BG: Record<CellState, string> = {
-  correct: 'bg-game-correct',
-  partial: 'bg-game-partial',
-  incorrect: 'bg-game-incorrect',
+  correct:   'bg-ace-green',
+  partial:   'bg-racket-orange',
+  incorrect: 'bg-miss-grey',
 };
 
-const ARIA_LABEL: Record<CellState, string> = {
-  correct: 'correct',
-  partial: 'proche',
-  incorrect: 'incorrect',
-};
-
-export function AttributeCell({ value, state, arrow, delay = 0, revealed = true }: AttributeCellProps) {
+export function AttributeCell({ value, state, arrow, delay = 0, label }: AttributeCellProps) {
+  const arrowLabel = arrow === 'up' ? ', plus grand' : arrow === 'down' ? ', plus petit' : '';
   return (
     <div
-      className={`
-        relative flex items-center justify-center min-w-[60px] h-12 px-1
-        rounded-cell text-xs font-semibold text-white text-center leading-tight
-        transition-all duration-300 select-none
-        ${revealed ? BG[state] : 'bg-game-card border border-game-border'}
-      `}
-      style={{ transitionDelay: `${delay}ms` }}
-      aria-label={`${value} — ${revealed ? ARIA_LABEL[state] : 'non révélé'}`}
+      className={`${BG[state]} aspect-square flex items-center justify-center rounded-cell px-1 select-none border-2 border-white/10 ${delay > 0 ? 'animate-flip' : ''}`}
+      style={{ animationDelay: `${delay}ms` }}
       role="cell"
+      title={label ? `${label} : ${value}` : value}
+      aria-label={`${label ? label + ' : ' : ''}${value} — ${state}${arrowLabel}`}
     >
-      <span className="break-words max-w-full px-1">{value}</span>
-      {revealed && arrow && (
-        <span
-          className="absolute -right-1 -top-1 text-base leading-none"
-          aria-label={arrow === 'up' ? 'plus grand' : 'plus petit'}
-        >
-          {arrow === 'up' ? '⬆️' : '⬇️'}
-        </span>
-      )}
+      <span className="flex items-center gap-0.5 text-white font-bold text-[11px] sm:text-sm text-center leading-tight uppercase tracking-wide">
+        {arrow === 'up'   && <span aria-hidden>↑</span>}
+        {arrow === 'down' && <span aria-hidden>↓</span>}
+        <span className="break-words max-w-full">{value}</span>
+      </span>
     </div>
   );
 }

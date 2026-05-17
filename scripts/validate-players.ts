@@ -34,10 +34,6 @@ function validate(players: Player[]): ValidationIssue[] {
       issues.push({ slug: player.id, type: 'error', message: 'missing country' });
     }
 
-    if (!player.continent) {
-      issues.push({ slug: player.id, type: 'error', message: 'missing continent' });
-    }
-
     // Warning: retired player with age bracket <25
     if (player.status === 'Retraité' && player.ageBracket === '<25') {
       issues.push({ slug: player.id, type: 'warning', message: 'retired but age bracket <25' });
@@ -49,12 +45,12 @@ function validate(players: Player[]): ValidationIssue[] {
     }
   }
 
-  // Warning: more than 40 players from same continent
-  const continentCounts: Record<string, number> = {};
-  players.forEach(p => { continentCounts[p.continent] = (continentCounts[p.continent] ?? 0) + 1; });
-  Object.entries(continentCounts).forEach(([c, n]) => {
-    if (n > 40) {
-      issues.push({ slug: '__dataset__', type: 'warning', message: `${n} joueurs du continent ${c} (> 40)` });
+  // Warning: more than 25 players from same country
+  const countryCounts: Record<string, number> = {};
+  players.forEach(p => { countryCounts[p.country] = (countryCounts[p.country] ?? 0) + 1; });
+  Object.entries(countryCounts).forEach(([c, n]) => {
+    if (n > 25) {
+      issues.push({ slug: '__dataset__', type: 'warning', message: `${n} joueurs du pays ${c} (> 25)` });
     }
   });
 

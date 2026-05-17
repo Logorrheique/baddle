@@ -10,7 +10,7 @@ import { getCached, setCached } from './cache.js';
 import { rateLimit, USER_AGENT } from './ethics.js';
 import { extractInfobox, getField } from './extract-infobox.js';
 import { parseBirthDate, parseHeight, parseHandedness, parseHighestRanking, parseCountry, calculateAge } from './parsers.js';
-import { ageToBracket, heightToBracket, rankingToTier, titlesToTier, COUNTRY_TO_CONTINENT, COUNTRY_TO_CODE, COUNTRY_EN_TO_FR } from './transforms.js';
+import { ageToBracket, heightToBracket, rankingToTier, titlesToTier, COUNTRY_TO_CODE, COUNTRY_EN_TO_FR } from './transforms.js';
 import { detectDiscipline, detectRetired } from './detect-discipline.js';
 import { extractOlympicMedal } from './olympic-medals.js';
 import { countMajorTitles } from './count-titles.js';
@@ -97,7 +97,7 @@ function yearToDecade(year: number): Decade {
   return '2020s';
 }
 
-function detectGender(_wikiSlug: string, introText: string, categories: string[], slug: string): 'H' | 'F' {
+function detectGender(introText: string, categories: string[]): 'H' | 'F' | null {
   const combined = (introText + ' ' + categories.join(' ')).toLowerCase();
 
   const femaleSignals = ["women's", 'female badminton', ' she ', ' her badminton', 'female player'];
@@ -106,16 +106,7 @@ function detectGender(_wikiSlug: string, introText: string, categories: string[]
   const maleSignals = ["men's", ' he ', ' his badminton', 'male player'];
   if (maleSignals.some(s => combined.includes(s))) return 'H';
 
-  const femaleSlugs = [
-    'an-seyoung', 'carolina-marin', 'pv-sindhu', 'chen-yufei', 'akane-yamaguchi',
-    'he-bingjiao', 'pornpawee-chochuwong', 'gregoria-tunjung', 'susi-susanti',
-    'zhang-ning', 'wang-yihan', 'li-xuerui', 'saina-nehwal', 'nozomi-okuhara',
-    'tai-tzu-ying', 'ratchanok-intanon', 'gao-ling', 'matsumoto-mayu',
-    'chen-qingchen', 'huang-yaqiong', 'liliyana-natsir',
-  ];
-  if (femaleSlugs.includes(slug)) return 'F';
-
-  return 'H';
+  return null;
 }
 
 async function scrapePlayer(entry: PlayerEntry): Promise<ScrapeResult> {
@@ -140,11 +131,9 @@ async function scrapePlayer(entry: PlayerEntry): Promise<ScrapeResult> {
     // Country
     const countryRaw = getField(fields, ...FIELD_LABELS.country);
     const countryEn = countryRaw ? parseCountry(countryRaw) : null;
-    const continent = countryEn ? (COUNTRY_TO_CONTINENT[countryEn] ?? null) : null;
     const countryCode = countryEn ? (COUNTRY_TO_CODE[countryEn] ?? null) : null;
     const countryFr = countryEn ? (COUNTRY_EN_TO_FR[countryEn] ?? countryEn) : null;
 
-    if (!continent) warnings.push(`unknown continent for country: "${countryEn}"`);
     if (!countryCode) warnings.push(`unknown country code for: "${countryEn}"`);
 
     // Height
@@ -168,7 +157,10 @@ async function scrapePlayer(entry: PlayerEntry): Promise<ScrapeResult> {
     const rankingNum = rankingRaw ? parseHighestRanking(rankingRaw) : null;
     if (!rankingNum) warnings.push('best ranking missing');
 
-    const gender = detectGender(entry.wikiSlug, introText, categories, entry.slug);
+    const gender = entry.gender ?? detectGender(introText, categories) ?? 'H';
+    if (!entry.gender && !detectGender(introText, categories)) {
+      warnings.push('gender not detected, defaulting to H');
+    }
     const discipline = detectDiscipline(introText, categories);
     const isRetired = detectRetired(introText, categories);
     const olympicMedal = extractOlympicMedal($, introText, categories);
@@ -177,7 +169,7 @@ async function scrapePlayer(entry: PlayerEntry): Promise<ScrapeResult> {
 
     const ageBracket: AgeBracket = age !== null ? ageToBracket(age) : '30-35';
     const heightBracket: HeightBracket = heightCm !== null ? heightToBracket(heightCm) : '175-180';
-    const bestRanking: RankingTier = rankingNum !== null ? rankingToTier(rankingNum) : 'Top 20';
+    const bestRanking: RankingTier = rankingNum !== null ? rankingToTier(rankingNum) : 'Top 50';
     const majorTitles: TitlesTier = titlesToTier(titlesCount);
     const bestOlympicMedal: OlympicMedal = olympicMedal;
 
@@ -202,7 +194,6 @@ async function scrapePlayer(entry: PlayerEntry): Promise<ScrapeResult> {
       name: $('h1#firstHeading').text().trim() || entry.slug,
       imageUrl,
       gender,
-      continent: continent ?? 'Asie',
       country: countryFr ?? countryEn ?? 'Inconnu',
       countryCode: countryCode ?? 'XX',
       status: isRetired ? 'Retraité' : 'Actif',
@@ -241,11 +232,11 @@ function generateReport(results: ScrapeResult[], players: Player[]): string {
   const succeeded = results.filter(r => r.player !== null);
   const failed = results.filter(r => r.player === null);
 
-  const continentCounts: Record<string, number> = {};
+  const countryCounts: Record<string, number> = {};
   const genderCounts: Record<string, number> = { H: 0, F: 0 };
   const disciplineCounts: Record<string, number> = {};
   players.forEach(p => {
-    continentCounts[p.continent] = (continentCounts[p.continent] ?? 0) + 1;
+    countryCounts[p.country] = (countryCounts[p.country] ?? 0) + 1;
     genderCounts[p.gender]++;
     disciplineCounts[p.discipline] = (disciplineCounts[p.discipline] ?? 0) + 1;
   });
@@ -268,8 +259,8 @@ function generateReport(results: ScrapeResult[], players: Player[]): string {
     '### Genre',
     ...Object.entries(genderCounts).map(([g, n]) => `- ${g === 'H' ? 'Hommes' : 'Femmes'} : ${n}`),
     '',
-    '### Continents',
-    ...Object.entries(continentCounts).sort((a, b) => b[1] - a[1]).map(([c, n]) => `- ${c} : ${n}`),
+    '### Pays',
+    ...Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).map(([c, n]) => `- ${c} : ${n}`),
     '',
     '### Disciplines',
     ...Object.entries(disciplineCounts).map(([d, n]) => `- ${d} : ${n}`),

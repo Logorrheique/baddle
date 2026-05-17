@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react';
 import type { GuessResult } from '../lib/comparison.ts';
-import type { Player } from '../types/player.ts';
+import type { Player, Language } from '../types/player.ts';
 import { buildShareText } from '../lib/share.ts';
 import { getPuzzleNumber } from '../lib/dailyPlayer.ts';
+import { useEscapeKey } from '../hooks/useEscapeKey.ts';
+import { t } from '../lib/i18n.ts';
 
 interface WinModalProps {
   target: Player;
-  allPlayers: Player[];
   guessCount: number;
   results: GuessResult[];
   onClose: () => void;
   onStats: () => void;
+  lang: Language;
 }
 
 function useCountdown() {
   const [remaining, setRemaining] = useState('');
-
   useEffect(() => {
     function update() {
       const now = new Date();
@@ -30,14 +31,41 @@ function useCountdown() {
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
   }, []);
-
   return remaining;
 }
 
-export function WinModal({ target, allPlayers, guessCount, results, onClose, onStats }: WinModalProps) {
+// Decorative confetti particles
+function ConfettiBurst() {
+  const colors = ['#6aaa64', '#f97316', '#fafaf9', '#3a3431'];
+  const pieces = Array.from({ length: 24 }, (_, i) => ({
+    left: `${(i / 24) * 100}%`,
+    delay: `${Math.random() * 0.4}s`,
+    color: colors[i % colors.length],
+    rotation: `${Math.random() * 360}deg`,
+  }));
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[60] overflow-hidden" aria-hidden="true">
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          className="absolute top-0 block w-2 h-3 animate-confetti"
+          style={{
+            left: p.left,
+            animationDelay: p.delay,
+            backgroundColor: p.color,
+            transform: `rotate(${p.rotation})`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function WinModal({ target, guessCount, results, onClose, onStats, lang }: WinModalProps) {
+  useEscapeKey(onClose);
   const countdown = useCountdown();
   const [copied, setCopied] = useState(false);
-  const puzzleNumber = getPuzzleNumber(allPlayers);
+  const puzzleNumber = getPuzzleNumber();
   const shareText = buildShareText(puzzleNumber, results);
 
   const handleShare = async () => {
@@ -57,45 +85,49 @@ export function WinModal({ target, allPlayers, guessCount, results, onClose, onS
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div
-        className="bg-game-card rounded-card p-6 max-w-sm w-full text-center shadow-2xl border border-game-border"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="text-4xl mb-3">🏸</div>
-        <h2 className="text-xl font-bold text-game-text mb-1">Bravo !</h2>
-        <p className="text-game-muted text-sm mb-4">
-          Tu as trouvé <span className="text-game-text font-semibold">{target.name}</span> en{' '}
-          <span className="text-game-correct font-bold font-mono">{guessCount}</span> essai{guessCount > 1 ? 's' : ''}.
-        </p>
+    <>
+      <ConfettiBurst />
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="win-title">
+        <div
+          className="bg-court-dark rounded-card p-6 max-w-sm w-full text-center shadow-2xl border border-court-line max-h-[90vh] overflow-y-auto animate-pop-in"
+          onClick={e => e.stopPropagation()}
+        >
+          <h2 id="win-title" className="text-2xl font-bold text-shuttle-white uppercase tracking-widest mb-1">
+            {t('win.title', lang)} 🏸
+          </h2>
+          <p className="text-shuttle-feather text-sm mb-4">
+            {t('win.found', lang, String(guessCount), guessCount > 1 ? (lang === 'fr' ? 's' : 'es') : '')}{' '}
+            <span className="font-medium text-shuttle-white">{target.name}</span>
+          </p>
 
-        {target.imageUrl && (
-          <img
-            src={target.imageUrl}
-            alt={target.name}
-            className="w-20 h-20 rounded-full object-cover object-top mx-auto mb-4 border-2 border-game-correct"
-          />
-        )}
+          {target.imageUrl && (
+            <img
+              src={target.imageUrl}
+              alt={target.name}
+              className="w-24 h-24 rounded-full object-cover object-top mx-auto mb-4 border-2 border-ace-green animate-celebrate"
+            />
+          )}
 
-        <div className="text-game-muted text-sm mb-4">
-          Prochain joueur dans <span className="font-mono text-game-text">{countdown}</span>
-        </div>
+          <p className="text-shuttle-feather text-sm mb-4">
+            {t('win.next', lang)} <span className="font-mono text-shuttle-white">{countdown}</span>
+          </p>
 
-        <div className="flex gap-2">
-          <button
-            onClick={onStats}
-            className="flex-1 py-2 rounded-card border border-game-border text-game-muted hover:text-game-text hover:border-game-text transition-colors text-sm"
-          >
-            Stats
-          </button>
-          <button
-            onClick={handleShare}
-            className="flex-1 py-2 rounded-card bg-game-correct text-white font-semibold hover:opacity-90 transition-opacity text-sm"
-          >
-            {copied ? 'Copié !' : 'Partager'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onStats}
+              className="flex-1 py-2.5 rounded-card border border-court-line text-shuttle-feather hover:text-shuttle-white hover:border-shuttle-feather transition-colors text-sm font-medium uppercase tracking-wider"
+            >
+              {t('win.stats', lang)}
+            </button>
+            <button
+              onClick={handleShare}
+              className="flex-1 py-2.5 rounded-card bg-ace-green text-white font-bold uppercase tracking-wider hover:opacity-90 transition-opacity text-sm"
+            >
+              {copied ? t('win.copied', lang) : t('win.share', lang)}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

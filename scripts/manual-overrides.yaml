@@ -52,6 +52,7 @@ li-xuerui:
 
 gao-ling:
   status: "Retraité"
+  discipline: "Double mixte"
   majorTitles: "10-19"        # 2x Olympic gold + multiple World Champs (mixed & women's doubles)
 
 tontowi-ahmad:
@@ -60,6 +61,8 @@ tontowi-ahmad:
 
 liliyana-natsir:
   status: "Retraité"
+  discipline: "Double mixte"
+  bestRanking: "N°1"
   majorTitles: "10-19"        # 4x World Champs + 1 Olympic gold
 
 lee-yong-dae:
@@ -68,6 +71,7 @@ lee-yong-dae:
 
 hendra-setiawan:
   status: "Retraité"
+  discipline: "Double"
   majorTitles: "4-9"
 
 alex-lanier:
@@ -76,3 +80,139 @@ alex-lanier:
 kento-momota:
   status: "Retraité"
   majorTitles: "4-9"          # 2018, 2019 World Champs + numerous Tour Finals
+
+beiwen-zhang:
+  country: "États-Unis"
+  countryCode: "US"
+
+lauren-smith:
+  name: "Lauren Smith"
+  country: "Royaume-Uni"
+  countryCode: "GB"
+  hand: "Droitier"
+  heightBracket: "170-175"
+  bestRanking: "Top 10"
+  ageBracket: "30-35"
+
+# ── French players — corrections validées ────────────────────
+christo-popov:
+  discipline: "Simple"            # auto-detect a tilté sur des mentions de doubles
+  bestRanking: "Top 4"            # career-high #4 mondial
+
+toma-popov:
+  discipline: "Simple"            # idem son frère
+
+pi-hongyan:
+  status: "Retraité"              # retraitée depuis 2012
+  bestRanking: "Top 4"            # career-high #4 mondiale
+
+brice-leverdez:
+  status: "Retraité"              # retraite annoncée 2024
+
+mihail-popov:
+  status: "Retraité"
+
+emilie-lefel:
+  status: "Retraité"
+
+audrey-mittelheisser:
+  status: "Retraité"
+
+ronan-labar:
+  status: "Retraité"
+
+thomas-rouxel:
+  status: "Retraité"
+
+sashina-vignes-waran:
+  status: "Retraité"
+
+# ── International — disciplines mal détectées (Double H/F/Mixte) ─
+mathias-boe:
+  discipline: "Double"
+  status: "Retraité"
+
+carsten-mogensen:
+  discipline: "Double"
+  status: "Retraité"
+
+fu-haifeng:
+  discipline: "Double"
+  status: "Retraité"
+
+hiroyuki-endo:
+  discipline: "Double"
+
+yu-yang:
+  discipline: "Double"
+
+wang-xiaoli:
+  discipline: "Double"
+  status: "Retraité"
+
+ayaka-takahashi:
+  discipline: "Double"
+  status: "Retraité"
+
+sayaka-hirota:
+  discipline: "Double"
+  status: "Retraité"
+
+tang-chun-man:
+  discipline: "Double mixte"
+  bestOlympicMedal: "Aucune"
+
+tse-ying-suet:
+  discipline: "Double mixte"
+  bestOlympicMedal: "Aucune"
+
+shevon-lai:
+  discipline: "Double mixte"
+
+# ── International — statuts retraités à corriger ─────────────
+chen-long:
+  status: "Retraité"
+
+tommy-sugiarto:
+  status: "Retraité"
+
+hans-vittinghus:
+  status: "Retraité"
+
+cai-yun:
+  status: "Retraité"
+
+greysia-polii:
+  status: "Retraité"
+
+misaki-matsutomo:
+  status: "Retraité"
+
+yuki-fukushima:
+  status: "Retraité"
+
+kenichi-tago:
+  status: "Retraité"
+
+sony-dwi-kuncoro:
+  status: "Retraité"
+
+saina-nehwal:
+  status: "Retraité"
+
+# ── International — Olympic medals "Or" suspectes ────────────
+shi-yuqi:
+  bestOlympicMedal: "Argent"   # Paris 2024 silver, not gold
+
+wang-zhiyi:
+  bestOlympicMedal: "Aucune"   # No Olympic gold
+
+goh-soon-huat:
+  bestOlympicMedal: "Aucune"
+
+# ── International — rankings sous-évalués (étaient N°1 en mixte) ─
+huang-yaqiong:
+  bestRanking: "N°1"
+
+wang-yilyu:
+  bestRanking: "N°1"

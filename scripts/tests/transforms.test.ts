@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   ageToBracket, heightToBracket, rankingToTier, titlesToTier,
-  COUNTRY_TO_CONTINENT, COUNTRY_TO_CODE, COUNTRY_EN_TO_FR,
+  COUNTRY_TO_CODE, COUNTRY_EN_TO_FR,
 } from '../transforms.js';
 
 describe('ageToBracket', () => {
@@ -39,14 +39,17 @@ describe('heightToBracket', () => {
 describe('rankingToTier', () => {
   it.each([
     [1, 'N°1'],
-    [2, 'Top 3'],
+    [2, 'Top 2'],
     [3, 'Top 3'],
-    [4, 'Top 5'],
+    [4, 'Top 4'],
     [5, 'Top 5'],
     [6, 'Top 10'],
     [10, 'Top 10'],
     [11, 'Top 20'],
     [20, 'Top 20'],
+    [21, 'Top 50'],
+    [50, 'Top 50'],
+    [200, 'Top 50'],
   ])('rank %i → %s', (rank, expected) => {
     expect(rankingToTier(rank)).toBe(expected);
   });
@@ -69,14 +72,6 @@ describe('titlesToTier', () => {
 });
 
 describe('country mappings', () => {
-  it('Denmark maps to Europe', () => {
-    expect(COUNTRY_TO_CONTINENT['Denmark']).toBe('Europe');
-  });
-
-  it('China maps to Asie', () => {
-    expect(COUNTRY_TO_CONTINENT['China']).toBe('Asie');
-  });
-
   it('Denmark code is DK', () => {
     expect(COUNTRY_TO_CODE['Denmark']).toBe('DK');
   });

@@ -1,13 +1,20 @@
-const STORAGE_KEYS = {
-  GAME: 'baddle:game',
-  STATS: 'baddle:stats',
-} as const;
+import type { GameMode, Language } from '../types/player.ts';
+
+const STORAGE_PREFIX = 'baddle';
+
+function gameKey(mode: GameMode): string { return `${STORAGE_PREFIX}:game:${mode}`; }
+function statsKey(mode: GameMode): string { return `${STORAGE_PREFIX}:stats:${mode}`; }
+
+export const MODE_STORAGE_KEY = `${STORAGE_PREFIX}:mode`;
+export const LANG_STORAGE_KEY = `${STORAGE_PREFIX}:lang`;
 
 export interface GameState {
   date: string;
   guesses: string[];
+  results: unknown[];        // GuessResult[]; structurally typed to avoid cycle
   won: boolean;
   finished: boolean;
+  targetId?: string;         // only set once the user has won
 }
 
 export interface UserStats {
@@ -26,9 +33,9 @@ const DEFAULT_STATS: UserStats = {
   guessDistribution: {},
 };
 
-export function loadGameState(): GameState | null {
+export function loadGameState(mode: GameMode): GameState | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.GAME);
+    const raw = localStorage.getItem(gameKey(mode));
     if (!raw) return null;
     return JSON.parse(raw) as GameState;
   } catch {
@@ -36,13 +43,13 @@ export function loadGameState(): GameState | null {
   }
 }
 
-export function saveGameState(state: GameState): void {
-  localStorage.setItem(STORAGE_KEYS.GAME, JSON.stringify(state));
+export function saveGameState(state: GameState, mode: GameMode): void {
+  localStorage.setItem(gameKey(mode), JSON.stringify(state));
 }
 
-export function loadStats(): UserStats {
+export function loadStats(mode: GameMode): UserStats {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.STATS);
+    const raw = localStorage.getItem(statsKey(mode));
     if (!raw) return { ...DEFAULT_STATS };
     return { ...DEFAULT_STATS, ...JSON.parse(raw) as UserStats };
   } catch {
@@ -50,8 +57,8 @@ export function loadStats(): UserStats {
   }
 }
 
-export function saveStats(stats: UserStats): void {
-  localStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(stats));
+export function saveStats(stats: UserStats, mode: GameMode): void {
+  localStorage.setItem(statsKey(mode), JSON.stringify(stats));
 }
 
 export function updateStatsOnWin(stats: UserStats, guessCount: number, prevDate: string, todayStr: string): UserStats {
@@ -73,10 +80,28 @@ export function updateStatsOnWin(stats: UserStats, guessCount: number, prevDate:
   };
 }
 
-export function updateStatsOnLoss(stats: UserStats): UserStats {
-  return {
-    ...stats,
-    played: stats.played + 1,
-    currentStreak: 0,
-  };
+export function loadMode(): GameMode {
+  try {
+    const raw = localStorage.getItem(MODE_STORAGE_KEY);
+    return raw === 'fr' ? 'fr' : 'intl';
+  } catch {
+    return 'intl';
+  }
+}
+
+export function saveMode(mode: GameMode): void {
+  localStorage.setItem(MODE_STORAGE_KEY, mode);
+}
+
+export function loadLanguage(): Language {
+  try {
+    const raw = localStorage.getItem(LANG_STORAGE_KEY);
+    return raw === 'en' ? 'en' : 'fr';
+  } catch {
+    return 'fr';
+  }
+}
+
+export function saveLanguage(lang: Language): void {
+  localStorage.setItem(LANG_STORAGE_KEY, lang);
 }

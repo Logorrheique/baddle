@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { Player } from '../types/player.ts';
+import type { Player, Language } from '../types/player.ts';
 import { FLAG_URL } from './AttributeCell.tsx';
+import { t } from '../lib/i18n.ts';
 
 interface SearchInputProps {
   players: Player[];
   excluded: Set<string>;
   onSelect: (player: Player) => void;
   disabled?: boolean;
+  lang: Language;
 }
 
 function fuzzyMatch(query: string, name: string): boolean {
@@ -14,7 +16,6 @@ function fuzzyMatch(query: string, name: string): boolean {
   const q = query.toLowerCase();
   const n = name.toLowerCase();
   if (n.includes(q)) return true;
-  // Check if all query chars appear in order
   let qi = 0;
   for (const c of n) {
     if (c === q[qi]) qi++;
@@ -30,10 +31,10 @@ function getInitials(name: string): string {
 function colorFromName(name: string): string {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff;
-  return `hsl(${h % 360}, 50%, 40%)`;
+  return `hsl(${h % 360}, 25%, 32%)`;
 }
 
-export function SearchInput({ players, excluded, onSelect, disabled }: SearchInputProps) {
+export function SearchInput({ players, excluded, onSelect, disabled, lang }: SearchInputProps) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
@@ -41,10 +42,16 @@ export function SearchInput({ players, excluded, onSelect, disabled }: SearchInp
   const listRef = useRef<HTMLUListElement>(null);
 
   const suggestions = players
-    .filter(p => !excluded.has(p.id) && fuzzyMatch(query, p.name))
-    .slice(0, 6);
+    .filter(p => !excluded.has(p.id) && fuzzyMatch(query, p.name));
 
   useEffect(() => { setHighlighted(0); }, [query]);
+
+  // Keep keyboard-highlighted item visible inside the scrollable dropdown
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    const li = listRef.current.querySelectorAll('[role="option"]')[highlighted] as HTMLElement | undefined;
+    li?.scrollIntoView({ block: 'nearest' });
+  }, [highlighted, open]);
 
   const confirm = useCallback((player: Player) => {
     onSelect(player);
@@ -55,22 +62,14 @@ export function SearchInput({ players, excluded, onSelect, disabled }: SearchInp
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!open || suggestions.length === 0) return;
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlighted(h => (h + 1) % suggestions.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlighted(h => (h - 1 + suggestions.length) % suggestions.length);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      confirm(suggestions[highlighted]);
-    } else if (e.key === 'Escape') {
-      setOpen(false);
-    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlighted(h => (h + 1) % suggestions.length); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlighted(h => (h - 1 + suggestions.length) % suggestions.length); }
+    else if (e.key === 'Enter') { e.preventDefault(); confirm(suggestions[highlighted]); }
+    else if (e.key === 'Escape') { setOpen(false); }
   };
 
   return (
-    <div className="relative w-full max-w-lg mx-auto">
+    <div className="relative w-full mx-auto">
       <input
         ref={inputRef}
         type="text"
@@ -80,9 +79,9 @@ export function SearchInput({ players, excluded, onSelect, disabled }: SearchInp
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={handleKeyDown}
-        placeholder={disabled ? 'Partie terminée !' : 'Rechercher un joueur…'}
-        className="w-full bg-game-card border border-game-border rounded-card px-4 py-3 text-game-text placeholder-game-muted focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
-        aria-label="Rechercher un joueur"
+        placeholder={disabled ? t('search.disabled', lang) : t('search.placeholder', lang)}
+        className="w-full bg-court-mid border-2 border-court-line rounded-card px-5 py-5 text-lg text-shuttle-white placeholder-shuttle-feather focus:outline-none focus:border-shuttle-feather transition-colors disabled:opacity-50"
+        aria-label={t('search.placeholder', lang)}
         aria-autocomplete="list"
         aria-expanded={open && suggestions.length > 0}
       />
@@ -90,7 +89,7 @@ export function SearchInput({ players, excluded, onSelect, disabled }: SearchInp
         <ul
           ref={listRef}
           role="listbox"
-          className="absolute z-50 w-full mt-1 bg-game-card border border-game-border rounded-card shadow-xl overflow-hidden"
+          className="absolute z-20 w-full mt-2 bg-court-mid border border-court-line rounded-card shadow-2xl overflow-y-auto overscroll-contain max-h-[60vh]"
         >
           {suggestions.map((p, i) => (
             <li
@@ -99,22 +98,24 @@ export function SearchInput({ players, excluded, onSelect, disabled }: SearchInp
               aria-selected={i === highlighted}
               onMouseDown={() => confirm(p)}
               onMouseEnter={() => setHighlighted(i)}
-              className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
-                i === highlighted ? 'bg-blue-600/30' : 'hover:bg-game-border/50'
+              className={`flex items-center gap-4 px-5 py-4 cursor-pointer transition-colors ${
+                i === highlighted ? 'bg-court-surface' : 'hover:bg-court-surface'
               }`}
             >
-              <span className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-xs font-bold"
-                style={{ background: p.imageUrl ? 'transparent' : colorFromName(p.name) }}>
+              <span
+                className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-base font-bold text-shuttle-white"
+                style={{ background: p.imageUrl ? 'transparent' : colorFromName(p.name) }}
+              >
                 {p.imageUrl
                   ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
                   : getInitials(p.name)
                 }
               </span>
-              <span className="flex-1 text-game-text text-sm font-medium">{p.name}</span>
+              <span className="flex-1 text-shuttle-white text-lg font-medium">{p.name}</span>
               <img
                 src={FLAG_URL(p.countryCode)}
                 alt={p.country}
-                className="w-5 h-4 object-cover rounded-sm"
+                className="w-9 h-6 object-cover rounded-sm"
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             </li>
