@@ -9,9 +9,4 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
-  test: {
-    globals: true,
-    environment: 'node',
-    include: ['tests/**/*.test.ts', 'scripts/tests/**/*.test.ts'],
-  },
 });
