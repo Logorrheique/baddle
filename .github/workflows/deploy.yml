@@ -1,0 +1,62 @@
+name: Deploy
+
+# CD : se déclenche uniquement quand la CI réussit sur master.
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [master]
+    types: [completed]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    # On ne déploie que si la CI est verte
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    environment: production
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # --- Serveur Express → Railway ---
+      - name: Deploy server to Railway
+        if: ${{ env.RAILWAY_TOKEN != '' }}
+        run: |
+          npm i -g @railway/cli
+          railway up --service baddle --ci
+
+      # --- Front Vite statique → Vercel ---
+      - name: Deploy frontend to Vercel
+        if: ${{ env.VERCEL_TOKEN != '' }}
+        run: |
+          npm i -g vercel
+          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          vercel build --prod --token="$VERCEL_TOKEN"
+          vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
+      - name: No deploy target configured
+        if: ${{ env.RAILWAY_TOKEN == '' && env.VERCEL_TOKEN == '' }}
+        run: |
+          echo "::notice::Aucun secret de déploiement configuré."
+          echo "Railway/Vercel déploient déjà via leur intégration Git native."
+          echo "Ajoute RAILWAY_TOKEN ou VERCEL_TOKEN dans les secrets pour activer le deploy par Actions."
