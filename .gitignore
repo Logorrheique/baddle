@@ -5,3 +5,9 @@ scripts/cache/
 *.local
 # Fichiers de métadonnées WSL/Windows (caractère ':' interdit dans les artefacts CI)
 *:Zone.Identifier
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
