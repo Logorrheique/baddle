@@ -40,11 +40,25 @@ export function SearchInput({ players, excluded, onSelect, disabled, lang }: Sea
   const [highlighted, setHighlighted] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const suggestions = players
     .filter(p => !excluded.has(p.id) && fuzzyMatch(query, p.name));
 
   useEffect(() => { setHighlighted(0); }, [query]);
+
+  // Close the dropdown on an interaction *outside* the component. We listen on
+  // pointerdown rather than the input's blur because, on touch devices,
+  // scrolling the suggestion list blurs the input — a blur-based close would
+  // dismiss the list the instant the user tries to scroll through it.
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [open]);
 
   // Keep keyboard-highlighted item visible inside the scrollable dropdown
   useEffect(() => {
@@ -69,7 +83,7 @@ export function SearchInput({ players, excluded, onSelect, disabled, lang }: Sea
   };
 
   return (
-    <div className="relative w-full mx-auto">
+    <div ref={containerRef} className="relative w-full mx-auto">
       <input
         ref={inputRef}
         type="text"
@@ -77,7 +91,15 @@ export function SearchInput({ players, excluded, onSelect, disabled, lang }: Sea
         disabled={disabled}
         onChange={e => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onBlur={e => {
+          // Close only when focus genuinely moves to another focusable element
+          // (e.g. keyboard Tab). A null relatedTarget — which is what touch
+          // scrolling the suggestion list produces — must NOT close the list,
+          // otherwise the list vanishes the moment a mobile user tries to
+          // scroll through it. Outside taps/clicks are handled by the
+          // pointerdown listener above.
+          if (e.relatedTarget && !containerRef.current?.contains(e.relatedTarget as Node)) setOpen(false);
+        }}
         onKeyDown={handleKeyDown}
         placeholder={disabled ? t('search.disabled', lang) : t('search.placeholder', lang)}
         className="w-full bg-court-mid border-2 border-court-line rounded-card px-5 py-5 text-lg text-shuttle-white placeholder-shuttle-feather focus:outline-none focus:border-shuttle-feather transition-colors disabled:opacity-50"
@@ -96,7 +118,8 @@ export function SearchInput({ players, excluded, onSelect, disabled, lang }: Sea
               key={p.id}
               role="option"
               aria-selected={i === highlighted}
-              onMouseDown={() => confirm(p)}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => confirm(p)}
               onMouseEnter={() => setHighlighted(i)}
               className={`flex items-center gap-4 px-5 py-4 cursor-pointer transition-colors ${
                 i === highlighted ? 'bg-court-surface' : 'hover:bg-court-surface'
