@@ -3,3 +3,5 @@ dist/
 scripts/cache/
 .env
 *.local
+# Fichiers de métadonnées WSL/Windows (caractère ':' interdit dans les artefacts CI)
+*:Zone.Identifier
