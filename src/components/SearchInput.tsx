@@ -130,7 +130,7 @@ export function SearchInput({ players, excluded, onSelect, disabled, lang }: Sea
                 style={{ background: p.imageUrl ? 'transparent' : colorFromName(p.name) }}
               >
                 {p.imageUrl
-                  ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                  ? <img src={p.imageUrl} alt={p.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   : getInitials(p.name)
                 }
               </span>
@@ -138,6 +138,8 @@ export function SearchInput({ players, excluded, onSelect, disabled, lang }: Sea
               <img
                 src={FLAG_URL(p.countryCode)}
                 alt={p.country}
+                loading="lazy"
+                decoding="async"
                 className="w-9 h-6 object-cover rounded-sm"
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />

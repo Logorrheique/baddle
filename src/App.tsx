@@ -1,17 +1,19 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Header } from './components/Header.tsx';
 import { ModeSwitcher } from './components/ModeSwitcher.tsx';
 import { SearchInput } from './components/SearchInput.tsx';
 import { GuessTable } from './components/GuessTable.tsx';
-import { WinModal } from './components/WinModal.tsx';
-import { StatsModal } from './components/StatsModal.tsx';
-import { HowToPlay } from './components/HowToPlay.tsx';
-import { SuggestionModal } from './components/SuggestionModal.tsx';
+
+const WinModal = lazy(() => import('./components/WinModal.tsx').then(m => ({ default: m.WinModal })));
+const StatsModal = lazy(() => import('./components/StatsModal.tsx').then(m => ({ default: m.StatsModal })));
+const HowToPlay = lazy(() => import('./components/HowToPlay.tsx').then(m => ({ default: m.HowToPlay })));
+const SuggestionModal = lazy(() => import('./components/SuggestionModal.tsx').then(m => ({ default: m.SuggestionModal })));
 import { getPuzzleNumber } from './lib/dailyPlayer.ts';
 import { loadMode, saveMode, loadLanguage, saveLanguage } from './lib/storage.ts';
 import { t } from './lib/i18n.ts';
 import { useGameState } from './hooks/useGameState.ts';
+import { usePracticeState } from './hooks/usePracticeState.ts';
 import { useStats } from './hooks/useStats.ts';
 import playersData from './data/players.json';
 import type { Player, GameMode, Language } from './types/player.ts';
@@ -36,9 +38,18 @@ function GamePage({ lang, handleLangChange }: { lang: Language; handleLangChange
   const [showWin, setShowWin] = useState(false);
   const [showSuggest, setShowSuggest] = useState(false);
   const [mode, setMode] = useState<GameMode>(() => loadMode());
+  const [practice, setPractice] = useState(false);
 
   const players = useMemo(() => playersFor(mode), [mode]);
-  const { guesses, results, won, finished, target, submitGuess } = useGameState(players, mode);
+  const daily = useGameState(players, mode);
+  const practiceGame = usePracticeState(players);
+
+  const active = practice ? practiceGame : daily;
+  const { guesses, results, won, finished, target } = active;
+  const submitGuess = async (player: Player) => {
+    if (practice) return practiceGame.submitGuess(player);
+    return daily.submitGuess(player);
+  };
   const { stats, refresh } = useStats(mode);
 
   const excluded = new Set(guesses.map(g => g.id));
@@ -46,16 +57,23 @@ function GamePage({ lang, handleLangChange }: { lang: Language; handleLangChange
   const handleSelect = async (player: Player) => {
     const isWin = await submitGuess(player);
     if (isWin) {
-      refresh();
+      if (!practice) refresh();
       setShowWin(true);
     }
   };
 
   const handleModeChange = (next: GameMode) => {
-    if (next === mode) return;
+    if (next === mode && !practice) return;
     saveMode(next);
     setMode(next);
+    setPractice(false);
     setShowWin(false);
+  };
+
+  const startPractice = () => {
+    setPractice(true);
+    setShowWin(false);
+    practiceGame.newGame();
   };
 
   const winningId = won && target ? target.id : undefined;
@@ -75,10 +93,26 @@ function GamePage({ lang, handleLangChange }: { lang: Language; handleLangChange
         </div>
 
         <p className="text-center text-shuttle-feather text-sm">
-          {t('app.intro', lang)}{' '}
-          <span className="text-shuttle-white font-medium">{players.length} {t('app.intro.players', lang)}</span>
-          {mode === 'fr' && <span className="text-shuttle-feather"> {t('app.intro.frSuffix', lang)}</span>}
+          {practice
+            ? t('practice.intro', lang)
+            : (<>
+                {t('app.intro', lang)}{' '}
+                <span className="text-shuttle-white font-medium">{players.length} {t('app.intro.players', lang)}</span>
+                {mode === 'fr' && <span className="text-shuttle-feather"> {t('app.intro.frSuffix', lang)}</span>}
+              </>)}
         </p>
+
+        {!practice && (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={startPractice}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold uppercase tracking-wider border border-court-line bg-court-mid text-shuttle-feather hover:text-shuttle-white hover:border-shuttle-feather transition-colors min-h-[36px]"
+            >
+              <span aria-hidden>🎲</span> {t('practice.button', lang)}
+            </button>
+          </div>
+        )}
 
         <SearchInput
           players={players}
@@ -100,24 +134,27 @@ function GamePage({ lang, handleLangChange }: { lang: Language; handleLangChange
         <span>🏸 #{getPuzzleNumber()}</span>
         <Link to="/about" className="hover:text-shuttle-white transition-colors">{t('app.about', lang)}</Link>
         <Link to="/legal" className="hover:text-shuttle-white transition-colors">{t('app.legal', lang)}</Link>
-        <button type="button" onClick={() => setShowSuggest(true)} className="hover:text-shuttle-white transition-colors">
-          💡 {lang === 'fr' ? 'Suggérer' : 'Suggest'}
+        <button type="button" onClick={() => (practice ? handleModeChange(mode) : setShowSuggest(true))} className="hover:text-shuttle-white transition-colors">
+          {practice ? `↩ ${t('practice.exit', lang)}` : `💡 ${lang === 'fr' ? 'Suggérer' : 'Suggest'}`}
         </button>
       </footer>
 
-      {showHowToPlay && <HowToPlay lang={lang} onClose={() => setShowHowToPlay(false)} />}
-      {showStats && <StatsModal lang={lang} stats={stats} onClose={() => setShowStats(false)} />}
-      {showSuggest && <SuggestionModal lang={lang} onClose={() => setShowSuggest(false)} />}
-      {won && showWin && target && (
-        <WinModal
-          target={target}
-          guessCount={guesses.length}
-          results={results}
-          lang={lang}
-          onClose={() => setShowWin(false)}
-          onStats={() => { setShowWin(false); refresh(); setShowStats(true); }}
-        />
-      )}
+      <Suspense fallback={null}>
+        {showHowToPlay && <HowToPlay lang={lang} onClose={() => setShowHowToPlay(false)} />}
+        {showStats && !practice && <StatsModal lang={lang} stats={stats} onClose={() => setShowStats(false)} />}
+        {showSuggest && <SuggestionModal lang={lang} onClose={() => setShowSuggest(false)} />}
+        {won && showWin && target && (
+          <WinModal
+            target={target}
+            guessCount={guesses.length}
+            results={results}
+            lang={lang}
+            onClose={() => setShowWin(false)}
+            onNewGame={practice ? startPractice : undefined}
+            onStats={() => { setShowWin(false); refresh(); setShowStats(true); }}
+          />
+        )}
+      </Suspense>
     </>
   );
 }

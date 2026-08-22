@@ -162,6 +162,19 @@ app.set('trust proxy', 1);
 app.disable('x-powered-by');
 app.use(express.json({ limit: '8kb' }));
 
+// ─── Security headers ──────────────────────────────────────────────
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  if (req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
+  next();
+});
+
 function getClientIp(req: express.Request): string {
   return (req.headers['cf-connecting-ip'] as string | undefined)
       ?? (req.headers['x-real-ip'] as string | undefined)
@@ -175,6 +188,11 @@ function originAllowed(req: express.Request, allowed: string[]): boolean {
   const referer = req.headers.referer ?? '';
   return allowed.some(a => origin === a || referer.startsWith(a + '/') || referer === a);
 }
+
+// Healthcheck (for Railway / uptime monitors)
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true, players: PLAYERS.length, frPlayers: FR_PLAYERS.length });
+});
 
 app.post('/api/guess', (req, res) => {
   const allowed = (process.env.ALLOWED_ORIGINS ?? '').split(',').map(s => s.trim()).filter(Boolean);
@@ -206,6 +224,11 @@ app.post('/api/guess', (req, res) => {
   });
 });
 
+// JSON 404 for unknown API routes (before SPA fallback would return HTML)
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
 // Static assets + SPA fallback
 app.use(express.static(DIST, {
   maxAge: '1h',
@@ -219,7 +242,23 @@ app.use((req, res, next) => {
   res.sendFile(resolve(DIST, 'index.html'));
 });
 
+// Body-parse & unexpected errors → JSON, never leak stack traces
+app.use((err: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (res.headersSent) return next(err);
+  const isBodyParse = err instanceof SyntaxError && 'body' in (err as object);
+  res.status(isBodyParse ? 400 : 500).json({ error: isBodyParse ? 'Invalid JSON' : 'Internal error' });
+});
+
 const port = Number(process.env.PORT) || 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Baddle server listening on :${port} — serving ${DIST}`);
 });
+
+// Graceful shutdown
+function shutdown(signal: string) {
+  console.log(`${signal} received, shutting down…`);
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 10_000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

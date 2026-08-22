@@ -51,7 +51,7 @@ export function GuessRow({ player, result, rowIndex, lang, isWinningRow }: Guess
         title={player.name}
       >
         {player.imageUrl ? (
-          <img src={player.imageUrl} alt={player.name} className="absolute inset-0 w-full h-full object-cover object-top" />
+          <img src={player.imageUrl} alt={player.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover object-top" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-base font-bold text-shuttle-feather">
             {player.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
@@ -61,6 +61,8 @@ export function GuessRow({ player, result, rowIndex, lang, isWinningRow }: Guess
         <img
           src={FLAG_URL(player.countryCode)}
           alt={player.country}
+          loading="lazy"
+          decoding="async"
           className="absolute top-1 right-1 w-5 h-3.5 sm:w-6 sm:h-4 object-cover rounded-[2px] ring-1 ring-black/50"
           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
         />

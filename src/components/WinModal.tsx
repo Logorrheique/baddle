@@ -13,6 +13,8 @@ interface WinModalProps {
   onClose: () => void;
   onStats: () => void;
   lang: Language;
+  /** When provided (practice mode), replaces countdown/stats/share with a "new game" button */
+  onNewGame?: () => void;
 }
 
 function useCountdown() {
@@ -61,7 +63,7 @@ function ConfettiBurst() {
   );
 }
 
-export function WinModal({ target, guessCount, results, onClose, onStats, lang }: WinModalProps) {
+export function WinModal({ target, guessCount, results, onClose, onStats, lang, onNewGame }: WinModalProps) {
   useEscapeKey(onClose);
   const countdown = useCountdown();
   const [copied, setCopied] = useState(false);
@@ -104,10 +106,20 @@ export function WinModal({ target, guessCount, results, onClose, onStats, lang }
             <img
               src={target.imageUrl}
               alt={target.name}
+              decoding="async"
               className="w-24 h-24 rounded-full object-cover object-top mx-auto mb-4 border-2 border-ace-green animate-celebrate"
             />
           )}
 
+          {onNewGame ? (
+            <button
+              onClick={() => { onClose(); onNewGame(); }}
+              className="w-full py-2.5 rounded-card bg-ace-green text-white font-bold uppercase tracking-wider hover:opacity-90 transition-opacity text-sm"
+            >
+              🎲 {t('practice.newGame', lang)}
+            </button>
+          ) : (
+            <>
           <p className="text-shuttle-feather text-sm mb-4">
             {t('win.next', lang)} <span className="font-mono text-shuttle-white">{countdown}</span>
           </p>
@@ -126,6 +138,8 @@ export function WinModal({ target, guessCount, results, onClose, onStats, lang }
               {copied ? t('win.copied', lang) : t('win.share', lang)}
             </button>
           </div>
+            </>
+          )}
         </div>
       </div>
     </>
